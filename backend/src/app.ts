@@ -1,5 +1,9 @@
 import cors from "cors";
 import express from "express";
+import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
+import { createDocumentRouter } from "./routes/document.routes.js";
+import { createImportRouter } from "./routes/import.routes.js";
+import { createUserRouter } from "./routes/user.routes.js";
 
 export function createApp() {
   const app = express();
@@ -12,9 +16,11 @@ export function createApp() {
     response.json({ status: "ok", service: "Ajaia Docs API" });
   });
 
-  app.use((_request, response) => {
-    response.status(404).json({ error: "Route not found" });
-  });
+  app.use("/api/users", createUserRouter());
+  app.use("/api/documents", createDocumentRouter());
+  app.use("/api/import", createImportRouter());
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }
