@@ -2,6 +2,12 @@ type ApiErrorBody = {
   error?: { code?: string; message?: string; details?: unknown };
 };
 
+const configuredApiHost = import.meta.env.VITE_API_URL?.trim().replace(
+  /\/+$/,
+  "",
+);
+const apiBaseUrl = configuredApiHost ? `${configuredApiHost}/api` : "/api";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -22,7 +28,10 @@ export async function apiRequest<T>(
   if (options.userId) headers.set("x-user-id", options.userId);
   if (options.body && !(options.body instanceof FormData))
     headers.set("content-type", "application/json");
-  const response = await fetch(`/api${path}`, { ...options, headers });
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    ...options,
+    headers,
+  });
   if (response.status === 204) return undefined as T;
   const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
     data?: T;
