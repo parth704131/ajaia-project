@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #17201b;
+  --color-ink-700: #46534b;
+  --color-ink-500: #728078;
+  --color-moss-700: #276447;
+  --color-moss-600: #327b57;
+  --color-moss-100: #e9f5ed;
+  --color-canvas: #f4f5f1;
+  --color-line: #dfe4dc;
+  --font-sans: "DM Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", Georgia, serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: var(--color-ink-950);
+  background: var(--color-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+.editor-content .tiptap {
+  min-height: 62vh;
+  padding: 4.5rem 5rem;
+  outline: none;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: #222923;
+}
+.editor-content .tiptap p {
+  margin: 0 0 0.85em;
+}
+.editor-content .tiptap h1 {
+  margin: 0.9em 0 0.45em;
+  font-size: 2.2rem;
+  line-height: 1.15;
+  font-weight: 650;
+}
+.editor-content .tiptap h2 {
+  margin: 0.9em 0 0.4em;
+  font-size: 1.65rem;
+  line-height: 1.25;
+  font-weight: 650;
+}
+.editor-content .tiptap ul {
+  margin: 0.6em 0 0.9em;
+  padding-left: 1.5em;
+  list-style: disc;
+}
+.editor-content .tiptap ol {
+  margin: 0.6em 0 0.9em;
+  padding-left: 1.5em;
+  list-style: decimal;
+}
+.editor-content .tiptap li {
+  margin: 0.2em 0;
+}
+.editor-content .tiptap li p {
+  margin: 0;
+}
+.editor-content .tiptap blockquote {
+  margin: 1em 0;
+  border-left: 3px solid #80a88f;
+  padding-left: 1em;
+  color: #566159;
+}
+.editor-content .tiptap code {
+  border-radius: 0.25rem;
+  background: #eef0ec;
+  padding: 0.08rem 0.28rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.88em;
+}
+.editor-content .tiptap pre {
+  margin: 1em 0;
+  overflow-x: auto;
+  border-radius: 0.65rem;
+  background: #202722;
+  padding: 1rem;
+  color: white;
+}
+.editor-content .tiptap pre code {
+  background: transparent;
+  padding: 0;
+}
+@media (max-width: 700px) {
+  .editor-content .tiptap {
+    padding: 2rem 1.4rem;
+    min-height: 68vh;
+  }
+}

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+.git/
+.dev-flow/
+backend/drizzle/meta/
+package-lock.json
