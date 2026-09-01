@@ -9,18 +9,27 @@ export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
+
   app.use(cors());
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/api/health", (_request, response) => {
-    response.json({ status: "ok", service: "Ajaia Docs API" });
+    response.json({
+      status: "ok",
+      service: "Ajaia Docs API",
+    });
   });
 
   app.use("/api/users", createUserRouter());
   app.use("/api/documents", createDocumentRouter());
   app.use("/api/import", createImportRouter());
+
   app.use(notFoundHandler);
   app.use(errorHandler);
 
   return app;
 }
+
+const app = createApp();
+
+export default app;
