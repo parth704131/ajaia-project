@@ -29,7 +29,11 @@ type LoadedDocument = {
 export function EditorPage() {
   const { documentId } = useParams<{ documentId: string }>();
   const currentUserId = useUserStore((state) => state.currentUserId);
-  const { status: userStatus } = useInitializeUsers();
+  const {
+    status: userStatus,
+    error: userError,
+    retry: retryUsers,
+  } = useInitializeUsers();
   const [data, setData] = useState<LoadedDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,22 +42,34 @@ export function EditorPage() {
   useEffect(() => {
     if (!documentId || !currentUserId) return;
     const controller = new AbortController();
+    let isActive = true;
+
     setLoading(true);
+    setData(null);
     setError(null);
+
     fetchDocument(documentId, currentUserId, controller.signal)
-      .then((result) => setData({ ...result, loadedForUserId: currentUserId }))
+      .then((result) => {
+        if (!isActive) return;
+        setData({ ...result, loadedForUserId: currentUserId });
+      })
       .catch((reason: unknown) => {
-        if (reason instanceof DOMException && reason.name === "AbortError")
-          return;
+        if (!isActive) return;
         setError(
           reason instanceof Error ? reason.message : "Could not open document",
         );
       })
-      .finally(() => setLoading(false));
-    return () => controller.abort();
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
   }, [currentUserId, documentId, reloadKey]);
 
-  if (userStatus === "idle" || userStatus === "loading" || loading) {
+  if (userStatus === "idle" || userStatus === "loading") {
     return (
       <div className="grid min-h-screen place-items-center">
         <LoaderCircle className="animate-spin text-moss-700" size={28} />
@@ -61,6 +77,18 @@ export function EditorPage() {
     );
   }
   if (
+    userStatus === "success" &&
+    currentUserId &&
+    (loading || (!error && (!data || data.loadedForUserId !== currentUserId)))
+  ) {
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <LoaderCircle className="animate-spin text-moss-700" size={28} />
+      </div>
+    );
+  }
+  if (
+    userStatus === "error" ||
     error ||
     !data ||
     !currentUserId ||
@@ -77,7 +105,7 @@ export function EditorPage() {
             This document isn’t available
           </h1>
           <p className="mt-2 text-ink-500">
-            {error ?? "The document may have been removed."}
+            {error ?? userError ?? "The document may have been removed."}
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link
@@ -87,7 +115,13 @@ export function EditorPage() {
               Back to docs
             </Link>
             <button
-              onClick={() => setReloadKey((value) => value + 1)}
+              onClick={() => {
+                if (userStatus === "error") {
+                  void retryUsers();
+                  return;
+                }
+                setReloadKey((value) => value + 1);
+              }}
               className="inline-flex items-center gap-2 rounded-xl bg-moss-700 px-4 py-2.5 text-sm font-bold text-white"
             >
               <RefreshCw size={15} /> Retry
