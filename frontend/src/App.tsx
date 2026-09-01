@@ -1,41 +1,33 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-type HealthResponse = {
-  status: string;
-  service: string;
-};
+const DashboardPage = lazy(() =>
+  import("./pages/DashboardPage").then((module) => ({
+    default: module.DashboardPage,
+  })),
+);
+const EditorPage = lazy(() =>
+  import("./pages/EditorPage").then((module) => ({
+    default: module.EditorPage,
+  })),
+);
 
 export function App() {
-  const [apiStatus, setApiStatus] = useState("Connecting…");
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/health", { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error("API unavailable");
-        return response.json() as Promise<HealthResponse>;
-      })
-      .then((data) => setApiStatus(`${data.service}: ${data.status}`))
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setApiStatus("Backend unavailable");
-      });
-
-    return () => controller.abort();
-  }, []);
-
   return (
-    <main className="shell">
-      <section className="card">
-        <span className="eyebrow">Ajaia</span>
-        <h1>Collaborative Docs</h1>
-        <p>The React and Express foundation is ready.</p>
-        <div className="status" role="status">
-          <span className="status-dot" aria-hidden="true" />
-          {apiStatus}
-        </div>
-      </section>
-    </main>
+    <BrowserRouter>
+      <Suspense
+        fallback={
+          <div className="grid min-h-screen place-items-center text-ink-500">
+            Opening Ajaia Docs…
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/documents/:documentId" element={<EditorPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 }
