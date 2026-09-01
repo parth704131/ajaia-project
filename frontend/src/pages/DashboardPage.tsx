@@ -1,16 +1,19 @@
 import { FileUp, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DeleteDocumentDialog } from "../components/documents/DeleteDocumentDialog";
 import { DocumentCard } from "../components/documents/DocumentCard";
 import { AppHeader } from "../components/layout/AppHeader";
 import { useInitializeUsers } from "../hooks/use-initialize-users";
 import {
   createDocument,
+  deleteDocument,
   fetchDocuments,
   importDocument,
   type DocumentList,
 } from "../services/api/document-api";
 import { useUserStore } from "../state/store";
+import type { DocumentCard as DocumentCardType } from "../types/api.types";
 
 const EMPTY_LIST: DocumentList = { owned: [], shared: [] };
 
@@ -26,6 +29,9 @@ export function DashboardPage() {
   const [documents, setDocuments] = useState(EMPTY_LIST);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [documentToDelete, setDocumentToDelete] =
+    useState<DocumentCardType | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -76,6 +82,29 @@ export function DashboardPage() {
       setSubmitting(false);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleDelete() {
+    if (!currentUserId || !documentToDelete || deleting) return;
+    setDeleting(true);
+    setError(null);
+
+    try {
+      await deleteDocument(documentToDelete.id, currentUserId);
+      setDocuments((current) => ({
+        ...current,
+        owned: current.owned.filter(
+          (document) => document.id !== documentToDelete.id,
+        ),
+      }));
+      setDocumentToDelete(null);
+    } catch (reason: unknown) {
+      setError(
+        reason instanceof Error ? reason.message : "Could not delete document",
+      );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -169,6 +198,7 @@ export function DashboardPage() {
           documents={documents.owned}
           loading={loading}
           emptyMessage="Create your first document to start writing."
+          onRequestDelete={setDocumentToDelete}
         />
         <DocumentSection
           title="Shared with you"
@@ -178,6 +208,14 @@ export function DashboardPage() {
           emptyMessage="Shared documents will appear here."
         />
       </main>
+      {documentToDelete && (
+        <DeleteDocumentDialog
+          title={documentToDelete.title}
+          deleting={deleting}
+          onCancel={() => setDocumentToDelete(null)}
+          onConfirm={() => void handleDelete()}
+        />
+      )}
     </div>
   );
 }
@@ -188,12 +226,14 @@ function DocumentSection({
   documents,
   loading,
   emptyMessage,
+  onRequestDelete,
 }: {
   title: string;
   subtitle: string;
   documents: DocumentList["owned"];
   loading: boolean;
   emptyMessage: string;
+  onRequestDelete?: (document: DocumentCardType) => void;
 }) {
   return (
     <section className="mt-14">
@@ -213,6 +253,7 @@ function DocumentSection({
               key={document.id}
               document={document}
               shared={title.startsWith("Shared")}
+              onRequestDelete={onRequestDelete}
             />
           ))}
         </div>
